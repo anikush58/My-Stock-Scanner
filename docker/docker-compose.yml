@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
+    environment:
+      UPSTOX_ACCESS_TOKEN: "eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiI2VEJWRjUiLCJqdGkiOiI2YTI5NmFkZDlkMDZiZjM5MWFlMjQ2MzUiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6ZmFsc2UsImlhdCI6MTc4MTA5OTIyOSwiaXNzIjoidWRhcGktZ2F0ZXdheS1zZXJ2aWNlIiwiZXhwIjoxNzgxMTI4ODAwfQ.IxE1vtwnAzU75ttFJ43ASmKt4FTk7Vhb_Ivn0-bKpNY"
 
   postgres:
     image: postgres:16
@@ -24,5 +26,4 @@ services:
 
 volumes:
   postgres_data:
-
 

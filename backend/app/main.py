@@ -3,6 +3,7 @@ from sqlalchemy import text
 
 from app.database.db import engine
 from app.schemas.stock import StockCreate
+from app.services.upstox import get_profile, get_candles, search_instrument
 
 app = FastAPI(
     title="My Stock Scanner",
@@ -88,4 +89,17 @@ def delete_stock(stock_id: int):
         "message": "Stock deleted",
         "id": stock_id
     }
+
+@app.get("/upstox/profile")
+def upstox_profile():
+    return get_profile()
+
+@app.get("/candles/{symbol}")
+def candles(symbol: str):
+    return get_candles(symbol)
+
+@app.get("/search/{symbol}")
+def search(symbol: str):
+    return search_instrument(symbol)
+
 
