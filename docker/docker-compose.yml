@@ -6,4 +6,23 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    container_name: stock-scanner-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: stockscanner
+      POSTGRES_USER: stockuser
+      POSTGRES_PASSWORD: K16101996k
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
 
