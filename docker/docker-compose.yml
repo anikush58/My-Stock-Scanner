@@ -9,16 +9,18 @@ services:
     depends_on:
       - postgres
     environment:
-      UPSTOX_ACCESS_TOKEN: "eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiI2VEJWRjUiLCJqdGkiOiI2YTI5NmFkZDlkMDZiZjM5MWFlMjQ2MzUiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6ZmFsc2UsImlhdCI6MTc4MTA5OTIyOSwiaXNzIjoidWRhcGktZ2F0ZXdheS1zZXJ2aWNlIiwiZXhwIjoxNzgxMTI4ODAwfQ.IxE1vtwnAzU75ttFJ43ASmKt4FTk7Vhb_Ivn0-bKpNY"
+      UPSTOX_ACCESS_TOKEN: ${UPSTOX_ACCESS_TOKEN}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
 
   postgres:
     image: postgres:16
     container_name: stock-scanner-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: stockscanner
-      POSTGRES_USER: stockuser
-      POSTGRES_PASSWORD: K16101996k
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -26,4 +28,3 @@ services:
 
 volumes:
   postgres_data:
-

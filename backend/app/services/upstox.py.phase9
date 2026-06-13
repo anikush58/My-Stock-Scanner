@@ -34,31 +34,6 @@ def calculate_rsi(series, period=14):
     return 100 - (100 / (1 + rs))
 
 
-def calculate_momentum_score(
-    sma9,
-    sma21,
-    volume,
-    avg_volume20,
-    rsi14,
-    breakout
-):
-    score = 0
-
-    if sma9 > sma21:
-        score += 25
-
-    if volume > avg_volume20:
-        score += 25
-
-    if rsi14 > 60:
-        score += 25
-
-    if breakout:
-        score += 25
-
-    return score
-
-
 def get_candles(instrument_key):
 
     response = requests.get(
@@ -115,15 +90,6 @@ def get_candles(instrument_key):
     ):
         signal = "RSI_BREAKOUT"
 
-    momentum_score = calculate_momentum_score(
-        latest["sma9"],
-        latest["sma21"],
-        latest["volume"],
-        latest["avg_volume20"],
-        latest["rsi14"],
-        breakout
-    )
-
     return {
         "latest_close": round(float(latest["close"]), 2),
         "latest_volume": int(latest["volume"]),
@@ -132,7 +98,6 @@ def get_candles(instrument_key):
         "sma21": round(float(latest["sma21"]), 2),
         "rsi14": round(float(latest["rsi14"]), 2),
         "breakout": bool(breakout),
-        "momentum_score": momentum_score,
         "signal": signal
     }
 
@@ -144,3 +109,4 @@ def scan_stock(symbol, instrument_key):
         "symbol": symbol,
         **data
     }
+
