@@ -205,6 +205,127 @@ def scan_watchlist(name: str):
 
     return results
 
+@app.post("/watchlists")
+def create_watchlist(name: str):
+
+    with engine.connect() as conn:
+
+        conn.execute(
+            text("""
+                INSERT INTO watchlists(name)
+                VALUES (:name)
+            """),
+            {"name": name.upper()}
+        )
+
+        conn.commit()
+
+    return {
+        "message": "Watchlist created",
+        "name": name.upper()
+    }
+
+
+@app.post("/watchlists/{name}/add/{symbol}")
+def add_stock_to_watchlist(name: str, symbol: str):
+
+    with engine.connect() as conn:
+
+        watchlist = conn.execute(
+            text("""
+                SELECT id
+                FROM watchlists
+                WHERE UPPER(name)=UPPER(:name)
+            """),
+            {"name": name}
+        ).fetchone()
+
+        if not watchlist:
+            raise HTTPException(
+                status_code=404,
+                detail="Watchlist not found"
+            )
+
+        stock = conn.execute(
+            text("""
+                SELECT id
+                FROM stocks
+                WHERE UPPER(symbol)=UPPER(:symbol)
+            """),
+            {"symbol": symbol}
+        ).fetchone()
+
+        if not stock:
+            raise HTTPException(
+                status_code=404,
+                detail="Stock not found"
+            )
+
+        conn.execute(
+            text("""
+                INSERT INTO watchlist_stocks
+                (
+                    watchlist_id,
+                    stock_id
+                )
+                VALUES
+                (
+                    :watchlist_id,
+                    :stock_id
+                )
+                ON CONFLICT DO NOTHING
+            """),
+            {
+                "watchlist_id": watchlist.id,
+                "stock_id": stock.id
+            }
+        )
+
+        conn.commit()
+
+    return {
+        "message": "Stock added",
+        "watchlist": name.upper(),
+        "symbol": symbol.upper()
+    }
+
+
+@app.delete("/watchlists/{name}/{symbol}")
+def remove_stock_from_watchlist(
+    name: str,
+    symbol: str
+):
+
+    with engine.connect() as conn:
+
+        conn.execute(
+            text("""
+                DELETE FROM watchlist_stocks
+                WHERE watchlist_id IN (
+                    SELECT id
+                    FROM watchlists
+                    WHERE UPPER(name)=UPPER(:name)
+                )
+                AND stock_id IN (
+                    SELECT id
+                    FROM stocks
+                    WHERE UPPER(symbol)=UPPER(:symbol)
+                )
+            """),
+            {
+                "name": name,
+                "symbol": symbol
+            }
+        )
+
+        conn.commit()
+
+    return {
+        "message": "Stock removed",
+        "watchlist": name.upper(),
+        "symbol": symbol.upper()
+    }
+
 
 @app.get("/upstox/profile")
 def upstox_profile():
@@ -261,6 +382,70 @@ def scanner():
 
     return results
 
+@app.get("/watchlists/{name}/leaderboard")
+def watchlist_leaderboard(name: str):
+
+    with engine.connect() as conn:
+
+        stocks = conn.execute(
+            text("""
+                SELECT
+                    s.symbol,
+                    s.instrument_key
+                FROM watchlist_stocks ws
+                JOIN watchlists w
+                    ON ws.watchlist_id = w.id
+                JOIN stocks s
+                    ON ws.stock_id = s.id
+                WHERE
+                    UPPER(w.name) = UPPER(:name)
+                    AND s.active = TRUE
+                ORDER BY s.symbol
+            """),
+            {"name": name}
+        ).fetchall()
+
+    results = []
+
+    for stock in stocks:
+
+        if not stock.instrument_key:
+            continue
+
+        try:
+
+            result = scan_stock(
+                stock.symbol,
+                stock.instrument_key
+            )
+
+            results.append(result)
+
+        except Exception:
+            pass
+
+    ranked = sorted(
+        results,
+        key=lambda x: x["momentum_score"],
+        reverse=True
+    )
+
+    leaderboard_data = []
+
+    for index, stock in enumerate(ranked, start=1):
+
+        leaderboard_data.append(
+            {
+                "rank": index,
+                "symbol": stock["symbol"],
+                "momentum_score": stock["momentum_score"],
+                "signal": stock["signal"]
+            }
+        )
+
+    return leaderboard_data
+
+
 @app.get("/leaderboard")
 def leaderboard():
 
@@ -316,5 +501,7 @@ def leaderboard():
         )
 
     return leaderboard_data
+
+
 
 
